@@ -487,56 +487,45 @@ func (d *DelayedTaskScheduler) generateTaskID() string {
 }
 
 func (d *DelayedTaskScheduler) serializeTask(task *DelayedTask) (string, error) {
-	// Create a simple JSON-like serialization instead of protobuf for now
-	// This avoids protobuf field mapping issues
-	taskJSON := fmt.Sprintf(`{
-		"id": "%s",
-		"stream": "%s", 
-		"message_type": "%s",
-		"message_data": "%s",
-		"scheduled_at": %d,
-		"created_at": %d,
-		"retries": %d,
-		"max_retries": %d
-	}`,
-		task.ID,
-		task.Stream,
-		task.Message.GetTypeUrl(),
-		string(task.Message.GetValue()), // Base64 encoding might be needed
-		task.ScheduledAt.Unix(),
-		task.CreatedAt.Unix(),
-		task.Retries,
-		task.MaxRetries,
-	)
+	// Convert our internal DelayedTask to protobuf DelayedTask
+	pbTask := &pb.DelayedTask{
+		Id:         task.ID,
+		Stream:     task.Stream,
+		Payload:    task.Message,
+		ExecuteAt:  timestamppb.New(task.ScheduledAt),
+		Metadata:   task.Metadata,
+		RetryCount: int32(task.Retries),
+		MaxRetries: int32(task.MaxRetries),
+	}
 
-	return taskJSON, nil
+	// Serialize to protobuf bytes
+	data, err := proto.Marshal(pbTask)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal protobuf task: %w", err)
+	}
+
+	// Return as base64 string for Redis storage
+	return string(data), nil
 }
 
 func (d *DelayedTaskScheduler) deserializeTask(data string) (*DelayedTask, error) {
-	// For now, return a simple implementation
-	// In a real implementation, you'd parse the JSON
+	// Deserialize protobuf DelayedTask
+	pbTask := &pb.DelayedTask{}
+	if err := proto.Unmarshal([]byte(data), pbTask); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal protobuf task: %w", err)
+	}
+
+	// Convert protobuf DelayedTask to internal DelayedTask
 	task := &DelayedTask{
-		ID:          "temp_id",
-		Stream:      "temp_stream",
-		ScheduledAt: time.Now(),
-		CreatedAt:   time.Now(),
-		Metadata:    make(map[string]string), // Initialize metadata map
-		Retries:     0,
-		MaxRetries:  3,
+		ID:          pbTask.GetId(),
+		Stream:      pbTask.GetStream(),
+		Message:     pbTask.GetPayload(),
+		ScheduledAt: pbTask.GetExecuteAt().AsTime(),
+		CreatedAt:   time.Now(), // We don't store created_at in protobuf version
+		Metadata:    pbTask.GetMetadata(),
+		Retries:     int(pbTask.GetRetryCount()),
+		MaxRetries:  int(pbTask.GetMaxRetries()),
 	}
 
-	// Create a dummy message for testing
-	userEvent := &pb.UserCreatedEvent{
-		UserId: "temp_user",
-		Email:  "temp@example.com",
-		Name:   "Temp User",
-	}
-
-	anyMsg, err := anypb.New(userEvent)
-	if err != nil {
-		return nil, err
-	}
-
-	task.Message = anyMsg
 	return task, nil
 }

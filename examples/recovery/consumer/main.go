@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/your-username/redigo-streams/pkg/proto"
+	"github.com/your-username/redigo-streams/examples/proto"
 	"github.com/your-username/redigo-streams/pkg/redigo"
 )
 

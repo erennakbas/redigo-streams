@@ -29,20 +29,4 @@ message DelayedTask {
   map<string, string> metadata = 5;
   int32 retry_count = 6;
   int32 max_retries = 7;
-}
-
-// Example message types for demonstration
-message UserCreatedEvent {
-  string user_id = 1;
-  string email = 2;
-  string name = 3;
-  google.protobuf.Timestamp created_at = 4;
-}
-
-message EmailSendTask {
-  string to = 1;
-  string subject = 2;
-  string body = 3;
-  string template_id = 4;
-  map<string, string> variables = 5;
 } 

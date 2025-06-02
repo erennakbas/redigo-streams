@@ -764,3 +764,78 @@ MIT License
 - **Cross-language support** for polyglot microservices
 
 For detailed analysis and benchmarks, see our [Serialization Format Comparison](docs/SERIALIZATION_COMPARISON.md).
+
+## Protocol Buffer Organization
+
+The library uses a clean separation between internal system messages and user-defined messages:
+
+### Internal Proto Messages (`pkg/proto/`)
+
+- **`StreamMessage`** - Internal wrapper for all Redis Stream messages
+- **`DelayedTask`** - Internal structure for delayed task scheduling
+
+These are used internally by the library and you typically don't need to interact with them directly.
+
+### Example Proto Messages (`examples/proto/`)
+
+- **`UserCreatedEvent`** - Demo user registration event
+- **`EmailSendTask`** - Demo email sending task
+- **`OrderCreatedEvent`** - Demo e-commerce order event
+- **`PaymentProcessTask`** - Demo payment processing task
+
+These serve as examples and can be copied/modified for your own use cases.
+
+### Creating Your Own Messages
+
+1. **Create your proto file:**
+
+```proto
+// myservice/proto/events.proto
+syntax = "proto3";
+
+package myservice;
+option go_package = "github.com/yourcompany/myservice/proto";
+
+import "google/protobuf/timestamp.proto";
+
+message UserRegistered {
+  string user_id = 1;
+  string email = 2;
+  google.protobuf.Timestamp registered_at = 3;
+}
+```
+
+2. **Generate Go code:**
+
+```bash
+protoc --go_out=. --go_opt=paths=source_relative myservice/proto/events.proto
+```
+
+3. **Use in your application:**
+
+```go
+import (
+    "github.com/yourcompany/myservice/proto"
+    "github.com/your-username/redigo-streams/pkg/redigo"
+)
+
+// Publisher
+event := &proto.UserRegistered{
+    UserId: "123",
+    Email: "user@example.com",
+}
+err := client.Publish(ctx, "user.events", event)
+
+// Consumer
+client.Subscribe("user.events", func(ctx context.Context, event *proto.UserRegistered) error {
+    // Process your event
+    return nil
+})
+```
+
+### Proto Best Practices
+
+- **Separate concerns**: Keep internal library messages separate from your business messages
+- **Versioning**: Use meaningful package names and plan for schema evolution
+- **Documentation**: Add comments to your proto fields for better maintainability
+- **Field numbers**: Never reuse field numbers, always add new fields with new numbers

@@ -225,151 +225,6 @@ func (x *DelayedTask) GetMaxRetries() int32 {
 	return 0
 }
 
-// Example message types for demonstration
-type UserCreatedEvent struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
-	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UserCreatedEvent) Reset() {
-	*x = UserCreatedEvent{}
-	mi := &file_pkg_proto_message_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UserCreatedEvent) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UserCreatedEvent) ProtoMessage() {}
-
-func (x *UserCreatedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_message_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UserCreatedEvent.ProtoReflect.Descriptor instead.
-func (*UserCreatedEvent) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_message_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *UserCreatedEvent) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *UserCreatedEvent) GetEmail() string {
-	if x != nil {
-		return x.Email
-	}
-	return ""
-}
-
-func (x *UserCreatedEvent) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *UserCreatedEvent) GetCreatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return nil
-}
-
-type EmailSendTask struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	To            string                 `protobuf:"bytes,1,opt,name=to,proto3" json:"to,omitempty"`
-	Subject       string                 `protobuf:"bytes,2,opt,name=subject,proto3" json:"subject,omitempty"`
-	Body          string                 `protobuf:"bytes,3,opt,name=body,proto3" json:"body,omitempty"`
-	TemplateId    string                 `protobuf:"bytes,4,opt,name=template_id,json=templateId,proto3" json:"template_id,omitempty"`
-	Variables     map[string]string      `protobuf:"bytes,5,rep,name=variables,proto3" json:"variables,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *EmailSendTask) Reset() {
-	*x = EmailSendTask{}
-	mi := &file_pkg_proto_message_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *EmailSendTask) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*EmailSendTask) ProtoMessage() {}
-
-func (x *EmailSendTask) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_message_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use EmailSendTask.ProtoReflect.Descriptor instead.
-func (*EmailSendTask) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_message_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *EmailSendTask) GetTo() string {
-	if x != nil {
-		return x.To
-	}
-	return ""
-}
-
-func (x *EmailSendTask) GetSubject() string {
-	if x != nil {
-		return x.Subject
-	}
-	return ""
-}
-
-func (x *EmailSendTask) GetBody() string {
-	if x != nil {
-		return x.Body
-	}
-	return ""
-}
-
-func (x *EmailSendTask) GetTemplateId() string {
-	if x != nil {
-		return x.TemplateId
-	}
-	return ""
-}
-
-func (x *EmailSendTask) GetVariables() map[string]string {
-	if x != nil {
-		return x.Variables
-	}
-	return nil
-}
-
 var File_pkg_proto_message_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_message_proto_rawDesc = "" +
@@ -404,22 +259,6 @@ const file_pkg_proto_message_proto_rawDesc = "" +
 	"maxRetries\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x90\x01\n" +
-	"\x10UserCreatedEvent\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x14\n" +
-	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\x129\n" +
-	"\n" +
-	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xf0\x01\n" +
-	"\rEmailSendTask\x12\x0e\n" +
-	"\x02to\x18\x01 \x01(\tR\x02to\x12\x18\n" +
-	"\asubject\x18\x02 \x01(\tR\asubject\x12\x12\n" +
-	"\x04body\x18\x03 \x01(\tR\x04body\x12\x1f\n" +
-	"\vtemplate_id\x18\x04 \x01(\tR\n" +
-	"templateId\x12B\n" +
-	"\tvariables\x18\x05 \x03(\v2$.redigo.EmailSendTask.VariablesEntryR\tvariables\x1a<\n" +
-	"\x0eVariablesEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B3Z1github.com/your-username/redigo-streams/pkg/protob\x06proto3"
 
 var (
@@ -434,33 +273,28 @@ func file_pkg_proto_message_proto_rawDescGZIP() []byte {
 	return file_pkg_proto_message_proto_rawDescData
 }
 
-var file_pkg_proto_message_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_pkg_proto_message_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_pkg_proto_message_proto_goTypes = []any{
 	(*StreamMessage)(nil),         // 0: redigo.StreamMessage
 	(*DelayedTask)(nil),           // 1: redigo.DelayedTask
-	(*UserCreatedEvent)(nil),      // 2: redigo.UserCreatedEvent
-	(*EmailSendTask)(nil),         // 3: redigo.EmailSendTask
-	nil,                           // 4: redigo.StreamMessage.MetadataEntry
-	nil,                           // 5: redigo.DelayedTask.MetadataEntry
-	nil,                           // 6: redigo.EmailSendTask.VariablesEntry
-	(*anypb.Any)(nil),             // 7: google.protobuf.Any
-	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
+	nil,                           // 2: redigo.StreamMessage.MetadataEntry
+	nil,                           // 3: redigo.DelayedTask.MetadataEntry
+	(*anypb.Any)(nil),             // 4: google.protobuf.Any
+	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
 }
 var file_pkg_proto_message_proto_depIdxs = []int32{
-	7, // 0: redigo.StreamMessage.payload:type_name -> google.protobuf.Any
-	8, // 1: redigo.StreamMessage.created_at:type_name -> google.protobuf.Timestamp
-	8, // 2: redigo.StreamMessage.scheduled_at:type_name -> google.protobuf.Timestamp
-	4, // 3: redigo.StreamMessage.metadata:type_name -> redigo.StreamMessage.MetadataEntry
-	7, // 4: redigo.DelayedTask.payload:type_name -> google.protobuf.Any
-	8, // 5: redigo.DelayedTask.execute_at:type_name -> google.protobuf.Timestamp
-	5, // 6: redigo.DelayedTask.metadata:type_name -> redigo.DelayedTask.MetadataEntry
-	8, // 7: redigo.UserCreatedEvent.created_at:type_name -> google.protobuf.Timestamp
-	6, // 8: redigo.EmailSendTask.variables:type_name -> redigo.EmailSendTask.VariablesEntry
-	9, // [9:9] is the sub-list for method output_type
-	9, // [9:9] is the sub-list for method input_type
-	9, // [9:9] is the sub-list for extension type_name
-	9, // [9:9] is the sub-list for extension extendee
-	0, // [0:9] is the sub-list for field type_name
+	4, // 0: redigo.StreamMessage.payload:type_name -> google.protobuf.Any
+	5, // 1: redigo.StreamMessage.created_at:type_name -> google.protobuf.Timestamp
+	5, // 2: redigo.StreamMessage.scheduled_at:type_name -> google.protobuf.Timestamp
+	2, // 3: redigo.StreamMessage.metadata:type_name -> redigo.StreamMessage.MetadataEntry
+	4, // 4: redigo.DelayedTask.payload:type_name -> google.protobuf.Any
+	5, // 5: redigo.DelayedTask.execute_at:type_name -> google.protobuf.Timestamp
+	3, // 6: redigo.DelayedTask.metadata:type_name -> redigo.DelayedTask.MetadataEntry
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_message_proto_init() }
@@ -474,7 +308,7 @@ func file_pkg_proto_message_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_message_proto_rawDesc), len(file_pkg_proto_message_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

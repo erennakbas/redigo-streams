@@ -54,6 +54,8 @@ install-tools:
 proto:
 	@echo "Generating protobuf files..."
 	protoc --go_out=. --go_opt=paths=source_relative pkg/proto/message.proto
+	protoc --go_out=. --go_opt=paths=source_relative examples/proto/examples.proto
+	@echo "✅ Generated internal and examples protobuf files"
 
 # Build the project
 build: proto
@@ -243,6 +245,7 @@ clean:
 	@echo "Cleaning..."
 	go clean ./...
 	rm -f pkg/proto/*.pb.go
+	rm -f examples/proto/*.pb.go
 
 # =============================================================================
 # 🚀 QUICK START

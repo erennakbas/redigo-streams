@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/your-username/redigo-streams/examples/proto"
 	"log"
 	"os"
 	"os/signal"
@@ -10,7 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/your-username/redigo-streams/pkg/proto"
 	"github.com/your-username/redigo-streams/pkg/redigo"
 )
 
