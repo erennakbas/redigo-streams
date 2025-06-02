@@ -714,7 +714,7 @@ type ConsumerConfig struct {
 ## Installation
 
 ```bash
-go get github.com/your-username/redigo-streams
+go get github.com/your-username/strego
 ```
 
 ## Requirements
@@ -816,7 +816,7 @@ protoc --go_out=. --go_opt=paths=source_relative myservice/proto/events.proto
 ```go
 import (
     "github.com/yourcompany/myservice/proto"
-    "github.com/your-username/redigo-streams/pkg/redigo"
+    "github.com/your-username/strego/pkg/redigo"
 )
 
 // Publisher

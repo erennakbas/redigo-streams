@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package examples;
 
-option go_package = "github.com/erennakbas/redigo-streams/examples/proto";
+option go_package = "github.com/erennakbas/strego/examples/proto";
 
 import "google/protobuf/timestamp.proto";
 

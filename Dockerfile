@@ -20,7 +20,7 @@ COPY . .
 RUN protoc --go_out=. --go_opt=paths=source_relative pkg/proto/message.proto
 
 # Build the application
-RUN go build -o /app/redigo-streams ./cmd/...
+RUN go build -o /app/strego ./cmd/...
 
 # Runtime stage
 FROM alpine:latest

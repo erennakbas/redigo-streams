@@ -259,7 +259,7 @@ const file_pkg_proto_message_proto_rawDesc = "" +
 	"maxRetries\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B3Z1github.com/your-username/redigo-streams/pkg/protob\x06proto3"
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B3Z1github.com/your-username/strego/pkg/protob\x06proto3"
 
 var (
 	file_pkg_proto_message_proto_rawDescOnce sync.Once
