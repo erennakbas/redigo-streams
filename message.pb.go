@@ -4,7 +4,7 @@
 // 	protoc        v5.29.3
 // source: pkg/proto/message.proto
 
-package proto
+package strego
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"

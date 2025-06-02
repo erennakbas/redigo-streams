@@ -12,8 +12,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	pb "github.com/erennakbas/strego/pkg/proto"
 )
 
 // DelayedTaskScheduler manages delayed task execution using Redis Sorted Sets
@@ -26,18 +24,6 @@ type DelayedTaskScheduler struct {
 	mu           sync.RWMutex
 	pollInterval time.Duration
 	keyPrefix    string
-}
-
-// DelayedTask represents a task scheduled for future execution
-type DelayedTask struct {
-	ID          string            `json:"id"`
-	Stream      string            `json:"stream"`
-	Message     *anypb.Any        `json:"message"`
-	ScheduledAt time.Time         `json:"scheduled_at"`
-	CreatedAt   time.Time         `json:"created_at"`
-	Metadata    map[string]string `json:"metadata"`
-	Retries     int               `json:"retries"`
-	MaxRetries  int               `json:"max_retries"`
 }
 
 // DelayedSchedulerConfig configuration for delayed scheduler
@@ -120,14 +106,13 @@ func (d *DelayedTaskScheduler) ScheduleTask(ctx context.Context, stream string, 
 
 	// Create delayed task
 	task := &DelayedTask{
-		ID:          d.generateTaskID(),
-		Stream:      stream,
-		Message:     payloadAny,
-		ScheduledAt: executeAt,
-		CreatedAt:   time.Now(),
-		Metadata:    make(map[string]string),
-		Retries:     0,
-		MaxRetries:  3,
+		Id:         d.generateTaskID(),
+		Stream:     stream,
+		Payload:    payloadAny,
+		ExecuteAt:  timestamppb.New(executeAt),
+		Metadata:   make(map[string]string),
+		RetryCount: 0,
+		MaxRetries: 3,
 	}
 
 	// Serialize task
@@ -149,7 +134,7 @@ func (d *DelayedTaskScheduler) ScheduleTask(ctx context.Context, stream string, 
 		return fmt.Errorf("failed to schedule task: %w", err)
 	}
 
-	log.Printf("Scheduled task %s for execution at %v", task.ID, executeAt)
+	log.Printf("Scheduled task %s for execution at %v", task.Id, executeAt)
 	return nil
 }
 
@@ -163,14 +148,13 @@ func (d *DelayedTaskScheduler) ScheduleTaskWithIdempotency(ctx context.Context, 
 
 	// Create delayed task with idempotency key
 	task := &DelayedTask{
-		ID:          d.generateTaskID(),
-		Stream:      stream,
-		Message:     payloadAny,
-		ScheduledAt: executeAt,
-		CreatedAt:   time.Now(),
-		Metadata:    make(map[string]string),
-		Retries:     0,
-		MaxRetries:  3,
+		Id:         d.generateTaskID(),
+		Stream:     stream,
+		Payload:    payloadAny,
+		ExecuteAt:  timestamppb.New(executeAt),
+		Metadata:   make(map[string]string),
+		RetryCount: 0,
+		MaxRetries: 3,
 	}
 
 	// Add idempotency key to metadata
@@ -195,7 +179,7 @@ func (d *DelayedTaskScheduler) ScheduleTaskWithIdempotency(ctx context.Context, 
 		return fmt.Errorf("failed to schedule task with idempotency: %w", err)
 	}
 
-	log.Printf("Scheduled task %s with idempotency key %s for execution at %v", task.ID, idempotencyKey, executeAt)
+	log.Printf("Scheduled task %s with idempotency key %s for execution at %v", task.Id, idempotencyKey, executeAt)
 	return nil
 }
 
@@ -255,34 +239,34 @@ func (d *DelayedTaskScheduler) processReadyTasks(ctx context.Context) error {
 
 		// Execute the task
 		if err := d.executeTask(ctx, task); err != nil {
-			log.Printf("Failed to execute task %s: %v", task.ID, err)
+			log.Printf("Failed to execute task %s: %v", task.Id, err)
 
 			// Handle retry logic
-			if task.Retries < task.MaxRetries {
-				task.Retries++
+			if task.RetryCount < task.MaxRetries {
+				task.RetryCount++
 				// Reschedule with exponential backoff
-				retryDelay := time.Duration(math.Pow(2, float64(task.Retries))) * time.Minute
+				retryDelay := time.Duration(math.Pow(2, float64(task.RetryCount))) * time.Minute
 				newExecuteAt := time.Now().Add(retryDelay)
 
 				log.Printf("Retrying task %s in %v (attempt %d/%d)",
-					task.ID, retryDelay, task.Retries, task.MaxRetries)
+					task.Id, retryDelay, task.RetryCount, task.MaxRetries)
 
 				// Remove from current position and reschedule
 				d.client.ZRem(ctx, delayedSetKey, taskData)
 
 				// Update task and reschedule
 				if rescheduleErr := d.rescheduleTask(ctx, task, newExecuteAt); rescheduleErr != nil {
-					log.Printf("Failed to reschedule task %s: %v", task.ID, rescheduleErr)
+					log.Printf("Failed to reschedule task %s: %v", task.Id, rescheduleErr)
 				}
 			} else {
-				log.Printf("Task %s exceeded max retries, moving to failed tasks", task.ID)
+				log.Printf("Task %s exceeded max retries, moving to failed tasks", task.Id)
 				d.moveToFailedTasks(ctx, task)
 				d.client.ZRem(ctx, delayedSetKey, taskData)
 			}
 		} else {
 			// Task executed successfully, remove from delayed set
 			d.client.ZRem(ctx, delayedSetKey, taskData)
-			log.Printf("Successfully executed task %s", task.ID)
+			log.Printf("Successfully executed task %s", task.Id)
 		}
 	}
 
@@ -292,7 +276,7 @@ func (d *DelayedTaskScheduler) processReadyTasks(ctx context.Context) error {
 // executeTask executes a delayed task by publishing to stream
 func (d *DelayedTaskScheduler) executeTask(ctx context.Context, task *DelayedTask) error {
 	// Unmarshal the message
-	messageType := task.Message.GetTypeUrl()
+	messageType := task.Payload.GetTypeUrl()
 
 	// Initialize metadata map if it's nil
 	metadata := make(map[string]string)
@@ -304,22 +288,22 @@ func (d *DelayedTaskScheduler) executeTask(ctx context.Context, task *DelayedTas
 	}
 
 	// Create stream message for execution
-	streamMsg := &pb.StreamMessage{
-		Id:          task.ID,
+	streamMsg := &StreamMessage{
+		Id:          task.Id,
 		Stream:      task.Stream,
 		MessageType: messageType,
-		Payload:     task.Message,
-		CreatedAt:   timestamppb.New(task.CreatedAt),
-		ScheduledAt: timestamppb.New(task.ScheduledAt),
+		Payload:     task.Payload,
+		CreatedAt:   timestamppb.Now(),
+		ScheduledAt: task.ExecuteAt,
 		Metadata:    metadata,
-		RetryCount:  int32(task.Retries),
-		MaxRetries:  int32(task.MaxRetries),
+		RetryCount:  task.RetryCount,
+		MaxRetries:  task.MaxRetries,
 	}
 
 	// Add execution metadata
-	streamMsg.Metadata["delayed_task_id"] = task.ID
+	streamMsg.Metadata["delayed_task_id"] = task.Id
 	streamMsg.Metadata["execution_time"] = time.Now().Format(time.RFC3339)
-	streamMsg.Metadata["scheduled_for"] = task.ScheduledAt.Format(time.RFC3339)
+	streamMsg.Metadata["scheduled_for"] = task.ExecuteAt.AsTime().Format(time.RFC3339)
 
 	// Serialize and publish to stream
 	data, err := proto.Marshal(streamMsg)
@@ -332,10 +316,10 @@ func (d *DelayedTaskScheduler) executeTask(ctx context.Context, task *DelayedTas
 		Values: map[string]interface{}{
 			"data":            data,
 			"type":            messageType,
-			"created":         task.CreatedAt.Unix(),
-			"scheduled_at":    task.ScheduledAt.Unix(),
+			"created":         time.Now().Unix(),
+			"scheduled_at":    task.ExecuteAt.AsTime().Unix(),
 			"executed_at":     time.Now().Unix(),
-			"delayed_task_id": task.ID,
+			"delayed_task_id": task.Id,
 		},
 	}
 
@@ -344,7 +328,7 @@ func (d *DelayedTaskScheduler) executeTask(ctx context.Context, task *DelayedTas
 
 // rescheduleTask reschedules a task for later execution
 func (d *DelayedTaskScheduler) rescheduleTask(ctx context.Context, task *DelayedTask, newExecuteAt time.Time) error {
-	task.ScheduledAt = newExecuteAt
+	task.ExecuteAt = timestamppb.New(newExecuteAt)
 
 	taskData, err := d.serializeTask(task)
 	if err != nil {
@@ -488,14 +472,14 @@ func (d *DelayedTaskScheduler) generateTaskID() string {
 
 func (d *DelayedTaskScheduler) serializeTask(task *DelayedTask) (string, error) {
 	// Convert our internal DelayedTask to protobuf DelayedTask
-	pbTask := &pb.DelayedTask{
-		Id:         task.ID,
+	pbTask := &DelayedTask{
+		Id:         task.Id,
 		Stream:     task.Stream,
-		Payload:    task.Message,
-		ExecuteAt:  timestamppb.New(task.ScheduledAt),
+		Payload:    task.Payload,
+		ExecuteAt:  task.ExecuteAt,
 		Metadata:   task.Metadata,
-		RetryCount: int32(task.Retries),
-		MaxRetries: int32(task.MaxRetries),
+		RetryCount: task.RetryCount,
+		MaxRetries: task.MaxRetries,
 	}
 
 	// Serialize to protobuf bytes
@@ -510,21 +494,20 @@ func (d *DelayedTaskScheduler) serializeTask(task *DelayedTask) (string, error) 
 
 func (d *DelayedTaskScheduler) deserializeTask(data string) (*DelayedTask, error) {
 	// Deserialize protobuf DelayedTask
-	pbTask := &pb.DelayedTask{}
+	pbTask := &DelayedTask{}
 	if err := proto.Unmarshal([]byte(data), pbTask); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal protobuf task: %w", err)
 	}
 
 	// Convert protobuf DelayedTask to internal DelayedTask
 	task := &DelayedTask{
-		ID:          pbTask.GetId(),
-		Stream:      pbTask.GetStream(),
-		Message:     pbTask.GetPayload(),
-		ScheduledAt: pbTask.GetExecuteAt().AsTime(),
-		CreatedAt:   time.Now(), // We don't store created_at in protobuf version
-		Metadata:    pbTask.GetMetadata(),
-		Retries:     int(pbTask.GetRetryCount()),
-		MaxRetries:  int(pbTask.GetMaxRetries()),
+		Id:         pbTask.GetId(),
+		Stream:     pbTask.GetStream(),
+		Payload:    pbTask.GetPayload(),
+		ExecuteAt:  pbTask.GetExecuteAt(),
+		Metadata:   pbTask.GetMetadata(),
+		RetryCount: pbTask.GetRetryCount(),
+		MaxRetries: pbTask.GetMaxRetries(),
 	}
 
 	return task, nil

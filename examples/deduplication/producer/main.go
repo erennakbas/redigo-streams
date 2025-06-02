@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	strego2 "github.com/erennakbas/strego"
 	"log"
 	"os"
 	"os/signal"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"github.com/erennakbas/strego/examples/proto"
-	"github.com/erennakbas/strego/pkg/strego"
 )
 
 func main() {
@@ -23,8 +23,8 @@ func main() {
 	fmt.Printf("📡 Connecting to Redis: %s\n", redisURL)
 
 	// Create publisher
-	publisherConfig := strego.DefaultPublisherConfig(redisURL)
-	client, err := strego.NewPublisherOnly(publisherConfig)
+	publisherConfig := strego2.DefaultPublisherConfig(redisURL)
+	client, err := strego2.NewPublisherOnly(publisherConfig)
 	if err != nil {
 		log.Fatalf("❌ Failed to create publisher: %v", err)
 	}
@@ -34,7 +34,7 @@ func main() {
 	defer cancel()
 
 	// Configure deduplication with 30 minute TTL
-	err = client.SetDeduplicationConfig(strego.DeduplicationConfig{
+	err = client.SetDeduplicationConfig(strego2.DeduplicationConfig{
 		Enabled:   true,
 		KeyPrefix: "dedup_demo",
 		TTL:       30 * time.Minute,
@@ -67,7 +67,7 @@ func main() {
 	fmt.Println("✅ Producer stopped cleanly")
 }
 
-func runDeduplicationDemo(ctx context.Context, client *strego.Client) {
+func runDeduplicationDemo(ctx context.Context, client *strego2.Client) {
 	// Give consumer time to start
 	time.Sleep(2 * time.Second)
 
@@ -97,7 +97,7 @@ func runDeduplicationDemo(ctx context.Context, client *strego.Client) {
 	}
 }
 
-func demonstrateRegularPublish(ctx context.Context, client *strego.Client) {
+func demonstrateRegularPublish(ctx context.Context, client *strego2.Client) {
 	fmt.Println("1️⃣ Regular publish (no deduplication protection):")
 	for i := 1; i <= 3; i++ {
 		userEvent := &proto.UserCreatedEvent{
@@ -117,7 +117,7 @@ func demonstrateRegularPublish(ctx context.Context, client *strego.Client) {
 	}
 }
 
-func demonstrateContentDeduplication(ctx context.Context, client *strego.Client) {
+func demonstrateContentDeduplication(ctx context.Context, client *strego2.Client) {
 	fmt.Println("\n2️⃣ Content-based deduplication:")
 	for i := 1; i <= 3; i++ {
 		sameContentEvent := &proto.UserCreatedEvent{
@@ -137,7 +137,7 @@ func demonstrateContentDeduplication(ctx context.Context, client *strego.Client)
 	}
 }
 
-func demonstrateIdempotencyKey(ctx context.Context, client *strego.Client) {
+func demonstrateIdempotencyKey(ctx context.Context, client *strego2.Client) {
 	fmt.Println("\n3️⃣ Idempotency key deduplication:")
 	idempotencyKey := fmt.Sprintf("user-signup-%d", time.Now().Unix())
 
@@ -160,7 +160,7 @@ func demonstrateIdempotencyKey(ctx context.Context, client *strego.Client) {
 	}
 }
 
-func demonstrateBusinessLogic(ctx context.Context, client *strego.Client) {
+func demonstrateBusinessLogic(ctx context.Context, client *strego2.Client) {
 	fmt.Println("\n4️⃣ Business logic deduplication:")
 	userID := "user-123"
 	action := "account_creation"
@@ -173,7 +173,7 @@ func demonstrateBusinessLogic(ctx context.Context, client *strego.Client) {
 		}
 
 		// Generate business logic hash (same user + same action = duplicate)
-		businessHash := strego.GenerateBusinessLogicHash("user.events", userID, action)
+		businessHash := strego2.GenerateBusinessLogicHash("user.events", userID, action)
 
 		err := client.PublishWithIdempotencyKey(ctx, "user.events", userEvent, businessHash)
 		if err != nil {
@@ -187,7 +187,7 @@ func demonstrateBusinessLogic(ctx context.Context, client *strego.Client) {
 	}
 }
 
-func demonstrateContextBasedDeduplication(ctx context.Context, client *strego.Client) {
+func demonstrateContextBasedDeduplication(ctx context.Context, client *strego2.Client) {
 	fmt.Println("\n5️⃣ Different business contexts (should be allowed):")
 	contexts := []string{"web", "mobile", "api"}
 
@@ -199,7 +199,7 @@ func demonstrateContextBasedDeduplication(ctx context.Context, client *strego.Cl
 		}
 
 		// Different contexts create different hashes
-		contextHash := strego.GenerateBusinessLogicHash("user.events", "user-multi-context", "signup", context)
+		contextHash := strego2.GenerateBusinessLogicHash("user.events", "user-multi-context", "signup", context)
 
 		err := client.PublishWithIdempotencyKey(ctx, "user.events", userEvent, contextHash)
 		if err != nil {

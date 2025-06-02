@@ -58,15 +58,6 @@ type StreamsClient interface {
 	Consumer
 }
 
-// Message represents a message in the stream
-type Message struct {
-	ID       string
-	Stream   string
-	Data     map[string]interface{}
-	Payload  proto.Message
-	Metadata map[string]string
-}
-
 // ProcessingResult represents the result of message processing
 type ProcessingResult struct {
 	Success bool

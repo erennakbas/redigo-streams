@@ -10,8 +10,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	pb "github.com/erennakbas/strego/pkg/proto"
 )
 
 // RedisPublisher implements the Publisher interface using Redis Streams
@@ -337,7 +335,7 @@ func (p *RedisPublisher) publishMessage(ctx context.Context, stream string, mess
 	}
 
 	// Create stream message
-	streamMsg := &pb.StreamMessage{
+	streamMsg := &StreamMessage{
 		Id:          generateMessageID(),
 		Stream:      stream,
 		MessageType: string(message.ProtoReflect().Descriptor().FullName()),

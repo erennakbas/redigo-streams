@@ -10,8 +10,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-
-	pb "github.com/erennakbas/redigo-streams/pkg/proto"
 )
 
 // RedisConsumer implements the Consumer interface using Redis Streams
@@ -197,7 +195,7 @@ func (c *RedisConsumer) processMessage(ctx context.Context, stream string, messa
 	}
 
 	// Deserialize stream message
-	var streamMsg pb.StreamMessage
+	var streamMsg StreamMessage
 	if err := proto.Unmarshal([]byte(dataBytes), &streamMsg); err != nil {
 		return fmt.Errorf("failed to unmarshal stream message: %w", err)
 	}

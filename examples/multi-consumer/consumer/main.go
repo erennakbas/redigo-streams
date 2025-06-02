@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/erennakbas/strego"
 	"log"
 	"os"
 	"os/signal"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	"github.com/erennakbas/strego/examples/proto"
-	"github.com/erennakbas/strego/pkg/strego"
 )
 
 // ProcessedMessages tracks which consumer processed which message for safety verification
