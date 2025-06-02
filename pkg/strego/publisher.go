@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pb "github.com/erennakbas/redigo-streams/pkg/proto"
+	pb "github.com/erennakbas/strego/pkg/proto"
 )
 
 // RedisPublisher implements the Publisher interface using Redis Streams

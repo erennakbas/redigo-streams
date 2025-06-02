@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/erennakbas/redigo-streams/examples/proto"
-	"github.com/erennakbas/redigo-streams/pkg/strego"
+	"github.com/erennakbas/strego/examples/proto"
+	"github.com/erennakbas/strego/pkg/strego"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module github.com/erennakbas/redigo-streams
+module github.com/erennakbas/strego
 
 go 1.23.9
 
