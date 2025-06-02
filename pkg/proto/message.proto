@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package redigo;
 
-option go_package = "github.com/your-username/redigo-streams/pkg/proto";
+option go_package = "github.com/erennakbas/redigo-streams/pkg/proto";
 
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";

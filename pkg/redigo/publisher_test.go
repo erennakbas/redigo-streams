@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
+	pb "github.com/erennakbas/redigo-streams/examples/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	pb "github.com/your-username/redigo-streams/examples/proto"
 )
 
 func TestNewPublisher(t *testing.T) {

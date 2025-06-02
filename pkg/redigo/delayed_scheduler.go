@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pb "github.com/your-username/redigo-streams/pkg/proto"
+	pb "github.com/erennakbas/redigo-streams/pkg/proto"
 )
 
 // DelayedTaskScheduler manages delayed task execution using Redis Sorted Sets

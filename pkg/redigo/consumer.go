@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	pb "github.com/your-username/redigo-streams/pkg/proto"
+	pb "github.com/erennakbas/redigo-streams/pkg/proto"
 )
 
 // RedisConsumer implements the Consumer interface using Redis Streams
