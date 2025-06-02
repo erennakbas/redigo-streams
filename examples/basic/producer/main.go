@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/erennakbas/redigo-streams/examples/proto"
-	"github.com/erennakbas/redigo-streams/pkg/redigo"
+	"github.com/erennakbas/redigo-streams/pkg/strego"
 )
 
 func main() {
@@ -23,8 +23,8 @@ func main() {
 	fmt.Printf("📡 Connecting to Redis: %s\n", redisURL)
 
 	// Create publisher
-	config := redigo.DefaultPublisherConfig(redisURL)
-	client, err := redigo.NewPublisherOnly(config)
+	config := strego.DefaultPublisherConfig(redisURL)
+	client, err := strego.NewPublisherOnly(config)
 	if err != nil {
 		log.Fatalf("❌ Failed to create publisher: %v", err)
 	}
@@ -53,7 +53,7 @@ func main() {
 	fmt.Println("✅ Producer stopped cleanly")
 }
 
-func publishMessages(ctx context.Context, client *redigo.Client) {
+func publishMessages(ctx context.Context, client *strego.Client) {
 	userCounter := 1
 
 	ticker := time.NewTicker(3 * time.Second)
@@ -79,7 +79,7 @@ func publishMessages(ctx context.Context, client *redigo.Client) {
 	}
 }
 
-func publishUserEvent(ctx context.Context, client *redigo.Client, counter int, timestamp time.Time) {
+func publishUserEvent(ctx context.Context, client *strego.Client, counter int, timestamp time.Time) {
 	users := []struct {
 		name  string
 		email string
@@ -108,7 +108,7 @@ func publishUserEvent(ctx context.Context, client *redigo.Client, counter int, t
 		timestamp.Format("15:04:05"), user.name, user.email)
 }
 
-func publishEmailTask(ctx context.Context, client *redigo.Client, counter int, timestamp time.Time) {
+func publishEmailTask(ctx context.Context, client *strego.Client, counter int, timestamp time.Time) {
 	subjects := []string{
 		"Welcome to our platform!",
 		"Please verify your email",

@@ -238,7 +238,7 @@ const file_pkg_proto_message_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12=\n" +
 	"\fscheduled_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\vscheduledAt\x12?\n" +
-	"\bmetadata\x18\a \x03(\v2#.redigo.StreamMessage.MetadataEntryR\bmetadata\x12\x1f\n" +
+	"\bmetadata\x18\a \x03(\v2#.strego.StreamMessage.MetadataEntryR\bmetadata\x12\x1f\n" +
 	"\vretry_count\x18\b \x01(\x05R\n" +
 	"retryCount\x12\x1f\n" +
 	"\vmax_retries\x18\t \x01(\x05R\n" +
@@ -252,7 +252,7 @@ const file_pkg_proto_message_proto_rawDesc = "" +
 	"\apayload\x18\x03 \x01(\v2\x14.google.protobuf.AnyR\apayload\x129\n" +
 	"\n" +
 	"execute_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texecuteAt\x12=\n" +
-	"\bmetadata\x18\x05 \x03(\v2!.redigo.DelayedTask.MetadataEntryR\bmetadata\x12\x1f\n" +
+	"\bmetadata\x18\x05 \x03(\v2!.strego.DelayedTask.MetadataEntryR\bmetadata\x12\x1f\n" +
 	"\vretry_count\x18\x06 \x01(\x05R\n" +
 	"retryCount\x12\x1f\n" +
 	"\vmax_retries\x18\a \x01(\x05R\n" +
@@ -275,21 +275,21 @@ func file_pkg_proto_message_proto_rawDescGZIP() []byte {
 
 var file_pkg_proto_message_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_pkg_proto_message_proto_goTypes = []any{
-	(*StreamMessage)(nil),         // 0: redigo.StreamMessage
-	(*DelayedTask)(nil),           // 1: redigo.DelayedTask
-	nil,                           // 2: redigo.StreamMessage.MetadataEntry
-	nil,                           // 3: redigo.DelayedTask.MetadataEntry
+	(*StreamMessage)(nil),         // 0: strego.StreamMessage
+	(*DelayedTask)(nil),           // 1: strego.DelayedTask
+	nil,                           // 2: strego.StreamMessage.MetadataEntry
+	nil,                           // 3: strego.DelayedTask.MetadataEntry
 	(*anypb.Any)(nil),             // 4: google.protobuf.Any
 	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
 }
 var file_pkg_proto_message_proto_depIdxs = []int32{
-	4, // 0: redigo.StreamMessage.payload:type_name -> google.protobuf.Any
-	5, // 1: redigo.StreamMessage.created_at:type_name -> google.protobuf.Timestamp
-	5, // 2: redigo.StreamMessage.scheduled_at:type_name -> google.protobuf.Timestamp
-	2, // 3: redigo.StreamMessage.metadata:type_name -> redigo.StreamMessage.MetadataEntry
-	4, // 4: redigo.DelayedTask.payload:type_name -> google.protobuf.Any
-	5, // 5: redigo.DelayedTask.execute_at:type_name -> google.protobuf.Timestamp
-	3, // 6: redigo.DelayedTask.metadata:type_name -> redigo.DelayedTask.MetadataEntry
+	4, // 0: strego.StreamMessage.payload:type_name -> google.protobuf.Any
+	5, // 1: strego.StreamMessage.created_at:type_name -> google.protobuf.Timestamp
+	5, // 2: strego.StreamMessage.scheduled_at:type_name -> google.protobuf.Timestamp
+	2, // 3: strego.StreamMessage.metadata:type_name -> strego.StreamMessage.MetadataEntry
+	4, // 4: strego.DelayedTask.payload:type_name -> google.protobuf.Any
+	5, // 5: strego.DelayedTask.execute_at:type_name -> google.protobuf.Timestamp
+	3, // 6: strego.DelayedTask.metadata:type_name -> strego.DelayedTask.MetadataEntry
 	7, // [7:7] is the sub-list for method output_type
 	7, // [7:7] is the sub-list for method input_type
 	7, // [7:7] is the sub-list for extension type_name

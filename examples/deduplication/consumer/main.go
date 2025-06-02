@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/erennakbas/redigo-streams/examples/proto"
-	"github.com/erennakbas/redigo-streams/pkg/redigo"
+	"github.com/erennakbas/redigo-streams/pkg/strego"
 )
 
 func main() {
@@ -23,8 +23,8 @@ func main() {
 	fmt.Printf("📡 Connecting to Redis: %s\n", redisURL)
 
 	// Create consumer
-	config := redigo.DefaultConsumerConfig(redisURL, "dedup-demo", "dedup-consumer")
-	client, err := redigo.NewConsumerOnly(config)
+	config := strego.DefaultConsumerConfig(redisURL, "dedup-demo", "dedup-consumer")
+	client, err := strego.NewConsumerOnly(config)
 	if err != nil {
 		log.Fatalf("❌ Failed to create consumer: %v", err)
 	}
@@ -79,7 +79,7 @@ func main() {
 	fmt.Println("✅ Consumer stopped cleanly")
 }
 
-func monitorDeduplicationStats(ctx context.Context, client *redigo.Client) {
+func monitorDeduplicationStats(ctx context.Context, client *strego.Client) {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
@@ -89,7 +89,7 @@ func monitorDeduplicationStats(ctx context.Context, client *redigo.Client) {
 	//		return
 	//	case <-ticker.C:
 	//		// Get client's publisher to access deduplication stats
-	//		publisher, err := redigo.NewPublisherOnly(redigo.DefaultPublisherConfig(
+	//		publisher, err := strego.NewPublisherOnly(strego.DefaultPublisherConfig(
 	//			os.Getenv("REDIS_URL")))
 	//		if err != nil {
 	//			continue

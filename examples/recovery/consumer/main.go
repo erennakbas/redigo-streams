@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/erennakbas/redigo-streams/examples/proto"
-	"github.com/erennakbas/redigo-streams/pkg/redigo"
+	"github.com/erennakbas/redigo-streams/pkg/strego"
 )
 
 func main() {
@@ -24,15 +24,15 @@ func main() {
 	fmt.Printf("📡 Connecting to Redis: %s\n", redisURL)
 
 	// Create consumer
-	config := redigo.DefaultConsumerConfig(redisURL, "recovery-demo", "recovery-consumer")
-	client, err := redigo.NewConsumerOnly(config)
+	config := strego.DefaultConsumerConfig(redisURL, "recovery-demo", "recovery-consumer")
+	client, err := strego.NewConsumerOnly(config)
 	if err != nil {
 		log.Fatalf("❌ Failed to create consumer: %v", err)
 	}
 	defer client.Close()
 
 	// Enable recovery with custom settings
-	err = client.EnableRecovery(redigo.RecoveryConfig{
+	err = client.EnableRecovery(strego.RecoveryConfig{
 		IdleTime:         30 * time.Second,       // Claim messages idle for 30 seconds
 		ClaimInterval:    10 * time.Second,       // Check every 10 seconds
 		MaxRetries:       2,                      // Max 2 retries before dead letter
@@ -152,7 +152,7 @@ func simulateProcessingFailures(event *proto.UserCreatedEvent, attempt int) erro
 	return nil
 }
 
-func monitorRecoveryProcess(ctx context.Context, client *redigo.Client) {
+func monitorRecoveryProcess(ctx context.Context, client *strego.Client) {
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 

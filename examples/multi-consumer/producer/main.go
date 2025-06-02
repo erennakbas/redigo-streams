@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/erennakbas/redigo-streams/examples/proto"
-	"github.com/erennakbas/redigo-streams/pkg/redigo"
+	"github.com/erennakbas/redigo-streams/pkg/strego"
 )
 
 func main() {
@@ -23,8 +23,8 @@ func main() {
 	fmt.Printf("📡 Connecting to Redis: %s\n", redisURL)
 
 	// Create publisher
-	config := redigo.DefaultPublisherConfig(redisURL)
-	client, err := redigo.NewPublisherOnly(config)
+	config := strego.DefaultPublisherConfig(redisURL)
+	client, err := strego.NewPublisherOnly(config)
 	if err != nil {
 		log.Fatalf("❌ Failed to create publisher: %v", err)
 	}
@@ -56,7 +56,7 @@ func main() {
 	fmt.Println("✅ Producer stopped cleanly")
 }
 
-func publishMultiConsumerTestMessages(ctx context.Context, client *redigo.Client) {
+func publishMultiConsumerTestMessages(ctx context.Context, client *strego.Client) {
 	// Give consumers time to start
 	time.Sleep(2 * time.Second)
 
@@ -89,7 +89,7 @@ func publishMultiConsumerTestMessages(ctx context.Context, client *redigo.Client
 	}
 }
 
-func publishSequentialUsers(ctx context.Context, client *redigo.Client, batch int) {
+func publishSequentialUsers(ctx context.Context, client *strego.Client, batch int) {
 	fmt.Printf("👤 Publishing sequential users for batch %d...\n", batch)
 
 	// Publish 12 user events sequentially
@@ -113,7 +113,7 @@ func publishSequentialUsers(ctx context.Context, client *redigo.Client, batch in
 	}
 }
 
-func publishMixedEmails(ctx context.Context, client *redigo.Client, batch int) {
+func publishMixedEmails(ctx context.Context, client *strego.Client, batch int) {
 	fmt.Printf("📧 Publishing mixed email tasks for batch %d...\n", batch)
 
 	emailTypes := []string{"welcome", "verification", "reset", "newsletter", "notification"}
@@ -145,7 +145,7 @@ func publishMixedEmails(ctx context.Context, client *redigo.Client, batch int) {
 	}
 }
 
-func publishBurstMessages(ctx context.Context, client *redigo.Client, batch int) {
+func publishBurstMessages(ctx context.Context, client *strego.Client, batch int) {
 	fmt.Printf("⚡ Publishing burst messages for batch %d...\n", batch)
 
 	// Publish 20 messages in quick succession to test load balancing

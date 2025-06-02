@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/erennakbas/redigo-streams/examples/proto"
-	"github.com/erennakbas/redigo-streams/pkg/redigo"
+	"github.com/erennakbas/redigo-streams/pkg/strego"
 )
 
 func main() {
@@ -23,8 +23,8 @@ func main() {
 	fmt.Printf("📡 Connecting to Redis: %s\n", redisURL)
 
 	// Create consumer
-	config := redigo.DefaultConsumerConfig(redisURL, "basic-group", "basic-consumer-1")
-	client, err := redigo.NewConsumerOnly(config)
+	config := strego.DefaultConsumerConfig(redisURL, "basic-group", "basic-consumer-1")
+	client, err := strego.NewConsumerOnly(config)
 	if err != nil {
 		log.Fatalf("❌ Failed to create consumer: %v", err)
 	}

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/erennakbas/redigo-streams/examples/proto"
-	"github.com/erennakbas/redigo-streams/pkg/redigo"
+	"github.com/erennakbas/redigo-streams/pkg/strego"
 )
 
 func main() {
@@ -23,8 +23,8 @@ func main() {
 	fmt.Printf("📡 Connecting to Redis: %s\n", redisURL)
 
 	// Create publisher
-	config := redigo.DefaultPublisherConfig(redisURL)
-	client, err := redigo.NewPublisherOnly(config)
+	config := strego.DefaultPublisherConfig(redisURL)
+	client, err := strego.NewPublisherOnly(config)
 	if err != nil {
 		log.Fatalf("❌ Failed to create publisher: %v", err)
 	}
@@ -66,7 +66,7 @@ func main() {
 	fmt.Println("✅ Producer stopped cleanly")
 }
 
-func scheduleDelayedTasks(ctx context.Context, client *redigo.Client) {
+func scheduleDelayedTasks(ctx context.Context, client *strego.Client) {
 	// Give consumer time to start
 	time.Sleep(2 * time.Second)
 
@@ -103,7 +103,7 @@ func scheduleDelayedTasks(ctx context.Context, client *redigo.Client) {
 	}
 }
 
-func scheduleImmediateTask(ctx context.Context, client *redigo.Client, counter int) {
+func scheduleImmediateTask(ctx context.Context, client *strego.Client, counter int) {
 	userEvent := &proto.UserCreatedEvent{
 		UserId: fmt.Sprintf("immediate-%d", counter),
 		Email:  fmt.Sprintf("immediate%d@example.com", counter),
@@ -119,7 +119,7 @@ func scheduleImmediateTask(ctx context.Context, client *redigo.Client, counter i
 	}
 }
 
-func scheduleShortDelayedTasks(ctx context.Context, client *redigo.Client, counter int) {
+func scheduleShortDelayedTasks(ctx context.Context, client *strego.Client, counter int) {
 	delays := []time.Duration{5 * time.Second, 10 * time.Second, 15 * time.Second}
 
 	for _, delay := range delays {
@@ -140,7 +140,7 @@ func scheduleShortDelayedTasks(ctx context.Context, client *redigo.Client, count
 	}
 }
 
-func scheduleSpecificTimeTasks(ctx context.Context, client *redigo.Client, counter int) {
+func scheduleSpecificTimeTasks(ctx context.Context, client *strego.Client, counter int) {
 	// Schedule email for 20 seconds from now
 	emailTask := &proto.EmailSendTask{
 		To:      fmt.Sprintf("scheduled%d@example.com", counter),
@@ -161,7 +161,7 @@ func scheduleSpecificTimeTasks(ctx context.Context, client *redigo.Client, count
 	}
 }
 
-func scheduleBatchTasks(ctx context.Context, client *redigo.Client, counter int) {
+func scheduleBatchTasks(ctx context.Context, client *strego.Client, counter int) {
 	// Schedule 3 tasks with staggered timing (every 3 seconds)
 	for i := 1; i <= 3; i++ {
 		delay := time.Duration(i*3) * time.Second
@@ -182,7 +182,7 @@ func scheduleBatchTasks(ctx context.Context, client *redigo.Client, counter int)
 	}
 }
 
-func monitorDelayedTasks(ctx context.Context, client *redigo.Client) {
+func monitorDelayedTasks(ctx context.Context, client *strego.Client) {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 

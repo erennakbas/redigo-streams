@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/erennakbas/redigo-streams/examples/proto"
-	"github.com/erennakbas/redigo-streams/pkg/redigo"
+	"github.com/erennakbas/redigo-streams/pkg/strego"
 )
 
 func main() {
@@ -23,8 +23,8 @@ func main() {
 	fmt.Printf("📡 Connecting to Redis: %s\n", redisURL)
 
 	// Create publisher
-	config := redigo.DefaultPublisherConfig(redisURL)
-	client, err := redigo.NewPublisherOnly(config)
+	config := strego.DefaultPublisherConfig(redisURL)
+	client, err := strego.NewPublisherOnly(config)
 	if err != nil {
 		log.Fatalf("❌ Failed to create publisher: %v", err)
 	}
@@ -55,7 +55,7 @@ func main() {
 	fmt.Println("✅ Producer stopped cleanly")
 }
 
-func publishRecoveryTestMessages(ctx context.Context, client *redigo.Client) {
+func publishRecoveryTestMessages(ctx context.Context, client *strego.Client) {
 	// Give consumer time to start
 	time.Sleep(2 * time.Second)
 
@@ -92,7 +92,7 @@ func publishRecoveryTestMessages(ctx context.Context, client *redigo.Client) {
 	}
 }
 
-func publishNormalMessage(ctx context.Context, client *redigo.Client, counter int) {
+func publishNormalMessage(ctx context.Context, client *strego.Client, counter int) {
 	userEvent := &proto.UserCreatedEvent{
 		UserId: fmt.Sprintf("normal-user-%d", counter),
 		Email:  fmt.Sprintf("normal%d@example.com", counter),
@@ -108,7 +108,7 @@ func publishNormalMessage(ctx context.Context, client *redigo.Client, counter in
 	}
 }
 
-func publishProblematicMessage(ctx context.Context, client *redigo.Client, counter int) {
+func publishProblematicMessage(ctx context.Context, client *strego.Client, counter int) {
 	// This message will be designed to trigger recovery scenarios
 	problematicUser := &proto.UserCreatedEvent{
 		UserId: fmt.Sprintf("problematic-user-%d", counter),
@@ -125,7 +125,7 @@ func publishProblematicMessage(ctx context.Context, client *redigo.Client, count
 	}
 }
 
-func publishEmailTask(ctx context.Context, client *redigo.Client, counter int) {
+func publishEmailTask(ctx context.Context, client *strego.Client, counter int) {
 	emailTask := &proto.EmailSendTask{
 		To:      fmt.Sprintf("recovery%d@example.com", counter),
 		Subject: fmt.Sprintf("Recovery Test Email #%d", counter),
@@ -145,7 +145,7 @@ func publishEmailTask(ctx context.Context, client *redigo.Client, counter int) {
 	}
 }
 
-func publishSpecialUserMessage(ctx context.Context, client *redigo.Client, counter int) {
+func publishSpecialUserMessage(ctx context.Context, client *strego.Client, counter int) {
 	// Special user that might need multiple attempts
 	specialUser := &proto.UserCreatedEvent{
 		UserId: fmt.Sprintf("special-user-%d", counter),

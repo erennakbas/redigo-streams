@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/erennakbas/redigo-streams/examples/proto"
-	"github.com/erennakbas/redigo-streams/pkg/redigo"
+	"github.com/erennakbas/redigo-streams/pkg/strego"
 )
 
 func main() {
@@ -24,8 +24,8 @@ func main() {
 	fmt.Printf("📡 Connecting to Redis: %s\n", redisURL)
 
 	// Create publisher
-	config := redigo.DefaultPublisherConfig(redisURL)
-	client, err := redigo.NewPublisherOnly(config)
+	config := strego.DefaultPublisherConfig(redisURL)
+	client, err := strego.NewPublisherOnly(config)
 	if err != nil {
 		log.Fatalf("❌ Failed to create publisher: %v", err)
 	}
@@ -56,7 +56,7 @@ func main() {
 	fmt.Println("✅ Producer stopped cleanly")
 }
 
-func publishConcurrentTestMessages(ctx context.Context, client *redigo.Client) {
+func publishConcurrentTestMessages(ctx context.Context, client *strego.Client) {
 	// Give consumer time to start
 	time.Sleep(2 * time.Second)
 
@@ -89,7 +89,7 @@ func publishConcurrentTestMessages(ctx context.Context, client *redigo.Client) {
 	}
 }
 
-func publishUserEventsBurst(ctx context.Context, client *redigo.Client, batch int) {
+func publishUserEventsBurst(ctx context.Context, client *strego.Client, batch int) {
 	fmt.Printf("👥 Publishing user events burst for batch %d...\n", batch)
 
 	// Publish 15 user events rapidly
@@ -113,7 +113,7 @@ func publishUserEventsBurst(ctx context.Context, client *redigo.Client, batch in
 	}
 }
 
-func publishEmailTasks(ctx context.Context, client *redigo.Client, batch int) {
+func publishEmailTasks(ctx context.Context, client *strego.Client, batch int) {
 	fmt.Printf("📧 Publishing email tasks for batch %d...\n", batch)
 
 	emailTypes := []struct {
@@ -153,7 +153,7 @@ func publishEmailTasks(ctx context.Context, client *redigo.Client, batch int) {
 	}
 }
 
-func publishHeavyLoad(ctx context.Context, client *redigo.Client, batch int) {
+func publishHeavyLoad(ctx context.Context, client *strego.Client, batch int) {
 	fmt.Printf("⚡ Publishing heavy load for batch %d...\n", batch)
 
 	// Publish 25 messages as fast as possible to test concurrent handling

@@ -816,7 +816,7 @@ protoc --go_out=. --go_opt=paths=source_relative myservice/proto/events.proto
 ```go
 import (
     "github.com/yourcompany/myservice/proto"
-    "github.com/your-username/strego/pkg/redigo"
+    "github.com/your-username/strego/pkg/strego"
 )
 
 // Publisher

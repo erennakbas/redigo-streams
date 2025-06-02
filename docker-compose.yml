@@ -4,7 +4,7 @@ services:
   # Redis service
   redis:
     image: redis:7-alpine
-    container_name: redigo-redis
+    container_name: strego-redis
     ports:
       - "6379:6379"
     command: redis-server --appendonly yes
@@ -21,7 +21,7 @@ services:
   # Go development environment
   app:
     build: .
-    container_name: redigo-app
+    container_name: strego-app
     depends_on:
       redis:
         condition: service_healthy
@@ -40,7 +40,7 @@ services:
   # Development shell (for running examples)
   dev:
     image: golang:1.21-alpine
-    container_name: redigo-dev
+    container_name: strego-dev
     depends_on:
       redis:
         condition: service_healthy

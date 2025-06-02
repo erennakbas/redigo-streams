@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/erennakbas/redigo-streams/examples/proto"
-	"github.com/erennakbas/redigo-streams/pkg/redigo"
+	"github.com/erennakbas/redigo-streams/pkg/strego"
 )
 
 // ProcessedMessages tracks which consumer processed which message for safety verification
@@ -66,15 +66,15 @@ func main() {
 
 	// Create multiple consumers with SAME group but DIFFERENT names
 	consumerNames := []string{"consumer-1", "consumer-2", "consumer-3"}
-	consumers := []*redigo.Client{}
+	consumers := []*strego.Client{}
 
 	fmt.Printf("\n👥 Creating %d consumers with same group...\n", len(consumerNames))
 
 	for _, name := range consumerNames {
-		config := redigo.DefaultConsumerConfig(redisURL, "safety-test-group", name)
+		config := strego.DefaultConsumerConfig(redisURL, "safety-test-group", name)
 		config.BatchSize = 2 // Small batch size for clearer demonstration
 
-		consumer, err := redigo.NewConsumerOnly(config)
+		consumer, err := strego.NewConsumerOnly(config)
 		if err != nil {
 			log.Fatalf("❌ Failed to create consumer %s: %v", name, err)
 		}
@@ -144,7 +144,7 @@ func main() {
 	fmt.Printf("🚀 Starting %d consumers...\n", len(consumers))
 	for i, consumer := range consumers {
 		consumerName := consumerNames[i]
-		go func(c *redigo.Client, name string) {
+		go func(c *strego.Client, name string) {
 			fmt.Printf("▶️  Starting consumer: %s\n", name)
 			if err := c.StartConsuming(ctx); err != nil {
 				log.Printf("❌ Consumer %s error: %v", name, err)

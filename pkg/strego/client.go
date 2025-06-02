@@ -1,4 +1,4 @@
-package redigo
+package strego
 
 import (
 	"context"
@@ -37,7 +37,7 @@ func DefaultConsumerConfig(redisURL, consumerGroup, consumerName string) Consume
 	}
 }
 
-// NewClient creates a new redigo client with both publisher and consumer
+// NewClient creates a new strego client with both publisher and consumer
 func NewClient(publisherConfig PublisherConfig, consumerConfig ConsumerConfig) (*Client, error) {
 	publisher, err := NewPublisher(publisherConfig)
 	if err != nil {

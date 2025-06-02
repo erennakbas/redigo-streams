@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/erennakbas/redigo-streams/examples/proto"
-	"github.com/erennakbas/redigo-streams/pkg/redigo"
+	"github.com/erennakbas/redigo-streams/pkg/strego"
 )
 
 func main() {
@@ -24,10 +24,10 @@ func main() {
 	fmt.Printf("📡 Connecting to Redis: %s\n", redisURL)
 
 	// Create concurrent consumer
-	config := redigo.DefaultConsumerConfig(redisURL, "concurrent-demo", "concurrent-consumer")
+	config := strego.DefaultConsumerConfig(redisURL, "concurrent-demo", "concurrent-consumer")
 	config.BatchSize = 5 // Process 5 messages at a time
 
-	client, err := redigo.NewConcurrentConsumerOnly(config)
+	client, err := strego.NewConcurrentConsumerOnly(config)
 	if err != nil {
 		log.Fatalf("❌ Failed to create concurrent consumer: %v", err)
 	}
