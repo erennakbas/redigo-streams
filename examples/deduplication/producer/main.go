@@ -3,14 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/your-username/redigo-streams/examples/proto"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/your-username/redigo-streams/pkg/redigo"
+	"github.com/erennakbas/redigo-streams/examples/proto"
+	"github.com/erennakbas/redigo-streams/pkg/redigo"
 )
 
 func main() {
