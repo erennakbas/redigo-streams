@@ -23,9 +23,12 @@ type ConcurrentConsumer struct {
 
 // NewConcurrentConsumer creates a new concurrent consumer
 func NewConcurrentConsumer(config ConsumerConfig) (*ConcurrentConsumer, error) {
-	client := redis.NewClient(&redis.Options{
-		Addr: config.RedisURL,
-	})
+	opts, err := redis.ParseURL(config.RedisURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse Redis URL: %w", err)
+	}
+
+	client := redis.NewClient(opts)
 
 	// Test connection
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
