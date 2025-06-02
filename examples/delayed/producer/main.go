@@ -208,10 +208,10 @@ func monitorDelayedTasks(ctx context.Context, client *strego.Client) {
 			if err == nil && len(pending) > 0 {
 				fmt.Printf("⏳ Pending Tasks (%d):\n", len(pending))
 				for _, task := range pending {
-					timeUntil := time.Until(task.ScheduledAt)
+					timeUntil := time.Until(task.ExecuteAt.AsTime())
 					if timeUntil > 0 {
 						fmt.Printf("  - %s: %s (in %v)\n",
-							task.ID[:8], task.Stream, timeUntil.Round(time.Second))
+							task.Id[:8], task.Stream, timeUntil.Round(time.Second))
 					}
 				}
 				fmt.Println()

@@ -206,8 +206,8 @@ func GenerateBusinessLogicHash(stream string, userID string, action string, addi
 	hasher.Write([]byte(userID))
 	hasher.Write([]byte(action))
 
-	for _, context := range additionalContext {
-		hasher.Write([]byte(context))
+	for _, ctx := range additionalContext {
+		hasher.Write([]byte(ctx))
 	}
 
 	return hex.EncodeToString(hasher.Sum(nil))[:16]
