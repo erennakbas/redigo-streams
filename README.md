@@ -411,7 +411,7 @@ _Source: [Rotational Labs Benchmarks](https://rotational.io/blog/go-serializatio
 #### 2. **Type Safety at Scale**
 
 ```go
-// JSON approach (like Machinery)
+// JSON approach
 type Arg struct {
     Type  string      // "string", "int64", etc.
     Value interface{} // Runtime type assertion required
@@ -445,7 +445,7 @@ message UserEvent {
 
 ### Comparison with Alternatives
 
-#### vs. JSON (used by Machinery)
+#### vs. JSON
 
 | Aspect               | JSON            | Protocol Buffers  |
 | -------------------- | --------------- | ----------------- |
