@@ -1,4 +1,4 @@
-module github.com/your-username/redigo-streams
+module github.com/erennakbas/redigo-streams
 
 go 1.21
 
