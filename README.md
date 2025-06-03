@@ -1,4 +1,4 @@
-# Redigo Streams
+# Strego
 
 A type-safe, thread-safe Redis Streams based task queue and messaging library for Go with built-in message recovery and retry mechanisms.
 
@@ -45,14 +45,14 @@ Our implementation provides additional safety layers:
 
 ```go
 // Consumer 1 (e.g., service instance 1)
-consumer1 := redigo.NewConsumer(redigo.ConsumerConfig{
+consumer1 := strego.NewConsumer(strego.ConsumerConfig{
     ConsumerGroup: "user-service",     // Same group
     ConsumerName:  "instance-1",       // Different name
     // ...
 })
 
 // Consumer 2 (e.g., service instance 2)
-consumer2 := redigo.NewConsumer(redigo.ConsumerConfig{
+consumer2 := strego.NewConsumer(strego.ConsumerConfig{
     ConsumerGroup: "user-service",     // Same group
     ConsumerName:  "instance-2",       // Different name
     // ...
@@ -65,7 +65,7 @@ consumer2 := redigo.NewConsumer(redigo.ConsumerConfig{
 
 ```go
 // Single consumer with worker pool
-consumer := redigo.NewConcurrentConsumer(config)
+consumer := strego.NewConcurrentConsumer(config)
 consumer.SetWorkerCount(8) // 8 concurrent workers
 
 consumer.Subscribe("events", func(ctx context.Context, event *MyEvent) error {
@@ -83,8 +83,8 @@ consumer.Subscribe("events", func(ctx context.Context, event *MyEvent) error {
 
 ```go
 // Create concurrent consumer
-config := redigo.DefaultConsumerConfig("redis://localhost:6379", "my-group", "worker-1")
-consumer, err := redigo.NewConcurrentConsumerOnly(config)
+config := strego.DefaultConsumerConfig("redis://localhost:6379", "my-group", "worker-1")
+consumer, err := strego.NewConcurrentConsumerOnly(config)
 
 // Configure worker pool
 err = consumer.EnableConcurrentProcessing(8) // 8 workers
@@ -283,11 +283,11 @@ idempotencyKey := "user-signup-12345"
 err := client.PublishWithIdempotencyKey(ctx, "user.events", userEvent, idempotencyKey)
 
 // Business logic deduplication
-businessHash := redigo.GenerateBusinessLogicHash("user.events", userID, "account_creation")
+businessHash := strego.GenerateBusinessLogicHash("user.events", userID, "account_creation")
 err := client.PublishWithIdempotencyKey(ctx, "user.events", userEvent, businessHash)
 
 // API operation deduplication
-apiKey := redigo.GenerateIdempotencyKey("create_account", userEmail, planType)
+apiKey := strego.GenerateIdempotencyKey("create_account", userEmail, planType)
 err := client.PublishWithIdempotencyKey(ctx, "user.events", userEvent, apiKey)
 ```
 
@@ -295,7 +295,7 @@ err := client.PublishWithIdempotencyKey(ctx, "user.events", userEvent, apiKey)
 
 ```go
 // Configure deduplication
-err := client.SetDeduplicationConfig(redigo.DeduplicationConfig{
+err := client.SetDeduplicationConfig(strego.DeduplicationConfig{
     Enabled:   true,
     KeyPrefix: "my_service",
     TTL:       24 * time.Hour, // Remember duplicates for 24 hours
@@ -597,14 +597,14 @@ fmt.Printf("Message: %s\n", protojson.Format(userEvent))
 
 ```go
 // Publisher example
-publisher := redigo.NewPublisher("redis://localhost:6379")
+publisher := strego.NewPublisher("redis://localhost:6379")
 err := publisher.Publish("user.events", &UserCreatedEvent{
     UserID: "123",
     Email:  "user@example.com",
 })
 
 // Consumer example
-consumer := redigo.NewConsumer("redis://localhost:6379", "user-service")
+consumer := strego.NewConsumer("redis://localhost:6379", "user-service")
 consumer.Subscribe("user.events", func(ctx context.Context, msg *UserCreatedEvent) error {
     // Process the message
     return nil
@@ -616,11 +616,11 @@ consumer.StartConsuming(ctx)
 
 ```go
 // Create consumer
-config := redigo.DefaultConsumerConfig("redis://localhost:6379", "my-group", "my-consumer")
-consumer, err := redigo.NewConsumerOnly(config)
+config := strego.DefaultConsumerConfig("redis://localhost:6379", "my-group", "my-consumer")
+consumer, err := strego.NewConsumerOnly(config)
 
 // Enable recovery with custom settings
-consumer.EnableRecovery(redigo.RecoveryConfig{
+consumer.EnableRecovery(strego.RecoveryConfig{
     IdleTime:         5 * time.Minute,  // Claim messages idle for 5 minutes
     ClaimInterval:    30 * time.Second, // Check every 30 seconds
     MaxRetries:       3,                // Max 3 retries before dead letter
@@ -752,7 +752,7 @@ MIT License
 
 ### Protocol Buffers
 
-- [Protocol Buffers Guide](docs/PROTOBUF_GUIDE.md) - Comprehensive guide to using Protocol Buffers with redigo-streams
+- [Protocol Buffers Guide](docs/PROTOBUF_GUIDE.md) - Comprehensive guide to using Protocol Buffers with strego-streams
 - [Serialization Format Comparison](docs/SERIALIZATION_COMPARISON.md) - Detailed comparison of JSON vs Protocol Buffers vs other formats
 
 ### Why Protocol Buffers?
