@@ -22,6 +22,7 @@ type RedisConsumer struct {
 	stopCh   chan struct{}
 	wg       sync.WaitGroup
 	recovery *MessageRecovery
+	streams  []string // Track subscribed streams for recovery
 }
 
 // NewConsumer creates a new Redis consumer
@@ -77,6 +78,19 @@ func (c *RedisConsumer) Subscribe(stream string, handler interface{}) error {
 	}
 
 	c.handlers[stream] = handlerValue
+
+	// Track streams for recovery
+	streamExists := false
+	for _, s := range c.streams {
+		if s == stream {
+			streamExists = true
+			break
+		}
+	}
+	if !streamExists {
+		c.streams = append(c.streams, stream)
+	}
+
 	return nil
 }
 
@@ -106,6 +120,16 @@ func (c *RedisConsumer) Start(ctx context.Context) error {
 	for stream, handler := range c.handlers {
 		c.wg.Add(1)
 		go c.consumeStream(ctx, stream, handler)
+	}
+
+	// Start recovery if enabled
+	if c.recovery != nil {
+		c.wg.Add(1)
+		go func() {
+			defer c.wg.Done()
+			fmt.Printf("🔄 Starting message recovery for streams: %v\n", c.streams)
+			c.recovery.StartRecovery(ctx, c.streams, c)
+		}()
 	}
 
 	return nil
@@ -186,7 +210,69 @@ func (c *RedisConsumer) consumeStream(ctx context.Context, stream string, handle
 	}
 }
 
-// processMessage processes a single message
+// ProcessMessage implements MessageProcessor interface for recovery
+func (c *RedisConsumer) ProcessMessage(ctx context.Context, stream string, message redis.XMessage) error {
+	c.mu.RLock()
+	handler, exists := c.handlers[stream]
+	c.mu.RUnlock()
+
+	if !exists {
+		return fmt.Errorf("no handler registered for stream %s", stream)
+	}
+
+	fmt.Printf("🔄 Recovery processing message %s from stream %s\n", message.ID, stream)
+	return c.processMessageForRecovery(ctx, stream, message, handler)
+}
+
+// processMessageForRecovery processes a message for recovery (without ACK - handled by recovery system)
+func (c *RedisConsumer) processMessageForRecovery(ctx context.Context, stream string, message redis.XMessage, handler reflect.Value) error {
+	// Extract message data
+	dataBytes, ok := message.Values["data"].(string)
+	if !ok {
+		return fmt.Errorf("message data not found or invalid type")
+	}
+
+	// Deserialize stream message
+	var streamMsg StreamMessage
+	if err := proto.Unmarshal([]byte(dataBytes), &streamMsg); err != nil {
+		return fmt.Errorf("failed to unmarshal stream message: %w", err)
+	}
+
+	// Get the expected message type from the handler
+	handlerType := handler.Type()
+	expectedType := handlerType.In(1)
+
+	// Create a new instance of the expected type
+	msgValue := reflect.New(expectedType.Elem()).Interface()
+	protoMsg, ok := msgValue.(proto.Message)
+	if !ok {
+		return fmt.Errorf("handler parameter is not a protobuf message")
+	}
+
+	// Unmarshal the payload
+	if err := anypb.UnmarshalTo(streamMsg.Payload, protoMsg, proto.UnmarshalOptions{}); err != nil {
+		return fmt.Errorf("failed to unmarshal payload: %w", err)
+	}
+
+	// Call the handler
+	args := []reflect.Value{
+		reflect.ValueOf(ctx),
+		reflect.ValueOf(protoMsg),
+	}
+
+	results := handler.Call(args)
+	if len(results) > 0 && !results[0].IsNil() {
+		err := results[0].Interface().(error)
+		fmt.Printf("❌ Recovery message processing failed: %v\n", err)
+		return err
+	}
+
+	fmt.Printf("✅ Recovery message %s processed successfully\n", message.ID)
+	// Don't ACK here - let the recovery system handle it
+	return nil
+}
+
+// processMessage processes a single message (for normal consumption)
 func (c *RedisConsumer) processMessage(ctx context.Context, stream string, message redis.XMessage, handler reflect.Value) error {
 	// Extract message data
 	dataBytes, ok := message.Values["data"].(string)
@@ -225,11 +311,12 @@ func (c *RedisConsumer) processMessage(ctx context.Context, stream string, messa
 	results := handler.Call(args)
 	if len(results) > 0 && !results[0].IsNil() {
 		err := results[0].Interface().(error)
-		// TODO: Implement retry logic based on error
+		fmt.Printf("❌ Normal message processing failed: %v\n", err)
 		return err
 	}
 
-	// Acknowledge the message
+	fmt.Printf("✅ Normal message %s processed successfully\n", message.ID)
+	// ACK the message for normal processing
 	return c.client.XAck(ctx, stream, c.config.ConsumerGroup, message.ID).Err()
 }
 
@@ -239,6 +326,8 @@ func (c *RedisConsumer) EnableRecovery(config RecoveryConfig) {
 	defer c.mu.Unlock()
 
 	c.recovery = NewMessageRecoveryWithConfig(c.client, c.config.ConsumerGroup, c.config.ConsumerName, config)
+	fmt.Printf("🔄 Message recovery enabled with config: IdleTime=%v, ClaimInterval=%v, MaxRetries=%d\n",
+		config.IdleTime, config.ClaimInterval, config.MaxRetries)
 }
 
 // GetRecovery returns the message recovery instance

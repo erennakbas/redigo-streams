@@ -3,14 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/erennakbas/strego"
+	"github.com/erennakbas/strego/examples/proto"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/erennakbas/redigo-streams/examples/proto"
-	"github.com/erennakbas/redigo-streams/pkg/strego"
 )
 
 func main() {
@@ -80,9 +79,6 @@ func publishRecoveryTestMessages(ctx context.Context, client *strego.Client) {
 			publishEmailTask(ctx, client, messageCounter)
 			time.Sleep(1 * time.Second)
 
-			// 4. Another user with special handling
-			publishSpecialUserMessage(ctx, client, messageCounter)
-
 			messageCounter++
 
 			// Wait before next batch
@@ -142,22 +138,5 @@ func publishEmailTask(ctx context.Context, client *strego.Client, counter int) {
 	} else {
 		fmt.Printf("📧 [%s] Published email task: %s\n",
 			time.Now().Format("15:04:05"), emailTask.Subject)
-	}
-}
-
-func publishSpecialUserMessage(ctx context.Context, client *strego.Client, counter int) {
-	// Special user that might need multiple attempts
-	specialUser := &proto.UserCreatedEvent{
-		UserId: fmt.Sprintf("special-user-%d", counter),
-		Email:  fmt.Sprintf("special%d@example.com", counter),
-		Name:   fmt.Sprintf("Special User %d", counter),
-	}
-
-	err := client.Publish(ctx, "test.recovery", specialUser)
-	if err != nil {
-		log.Printf("❌ Failed to publish special message: %v", err)
-	} else {
-		fmt.Printf("⭐ [%s] Published special user: %s (may need retry)\n",
-			time.Now().Format("15:04:05"), specialUser.Name)
 	}
 }

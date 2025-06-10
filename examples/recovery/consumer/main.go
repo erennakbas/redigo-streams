@@ -3,76 +3,78 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/erennakbas/strego/examples/proto"
 	"log"
 	"os"
 	"os/signal"
-	"strings"
+	"sync/atomic"
 	"syscall"
 	"time"
 
-	"github.com/erennakbas/redigo-streams/examples/proto"
-	"github.com/erennakbas/redigo-streams/pkg/strego"
+	"github.com/erennakbas/strego"
 )
 
 func main() {
+	// Get Redis URL from environment or use default
 	redisURL := os.Getenv("REDIS_URL")
 	if redisURL == "" {
 		redisURL = "redis://localhost:6379"
 	}
 
-	fmt.Println("🔄 [RECOVERY CONSUMER] Starting Message Recovery Demo Consumer...")
-	fmt.Printf("📡 Connecting to Redis: %s\n", redisURL)
+	// Create consumer config
+	config := strego.DefaultConsumerConfig(redisURL, "recovery-test-group", "recovery-consumer-1")
 
 	// Create consumer
-	config := strego.DefaultConsumerConfig(redisURL, "recovery-demo", "recovery-consumer")
-	client, err := strego.NewConsumerOnly(config)
+	consumer, err := strego.NewConsumerOnly(config)
 	if err != nil {
-		log.Fatalf("❌ Failed to create consumer: %v", err)
+		log.Fatalf("Failed to create consumer: %v", err)
 	}
-	defer client.Close()
+	defer consumer.Close()
 
-	// Enable recovery with custom settings
-	err = client.EnableRecovery(strego.RecoveryConfig{
-		IdleTime:         30 * time.Second,       // Claim messages idle for 30 seconds
-		ClaimInterval:    10 * time.Second,       // Check every 10 seconds
-		MaxRetries:       2,                      // Max 2 retries before dead letter
-		DeadLetterStream: "recovery-demo:failed", // Dead letter queue
-	})
+	// Enable recovery with aggressive settings for testing
+	recoveryConfig := strego.RecoveryConfig{
+		IdleTime:         5 * time.Second, // Claim messages idle for 10 seconds
+		ClaimInterval:    2 * time.Second, // Check every 3 seconds
+		MaxRetries:       2,               // Max 2 retries before dead letter
+		DeadLetterStream: "recovery-test-group:dead-letter",
+	}
+
+	err = consumer.EnableRecovery(recoveryConfig)
 	if err != nil {
-		log.Fatalf("❌ Failed to enable recovery: %v", err)
+		log.Fatalf("Failed to enable recovery: %v", err)
 	}
-	fmt.Println("✅ Message recovery enabled")
 
-	// Track processing attempts for demo
-	processingAttempts := make(map[string]int)
+	// Counter for tracking processing attempts
+	var processCount int64
 
-	// Subscribe to recovery test messages with intentional failures
-	err = client.Subscribe("test.recovery", func(ctx context.Context, event *proto.UserCreatedEvent) error {
-		timestamp := time.Now().Format("15:04:05")
+	// Subscribe to events with intentional failures
+	err = consumer.Subscribe("test.recovery", func(ctx context.Context, event *proto.UserCreatedEvent) error {
+		count := atomic.AddInt64(&processCount, 1)
 
-		// Track attempts
-		processingAttempts[event.UserId]++
-		attempt := processingAttempts[event.UserId]
+		fmt.Printf("🎯 Processing attempt #%d for user: %s (ID: %s)\n",
+			count, event.GetName(), event.GetUserId())
 
-		fmt.Printf("🔄 [%s] Processing user: %s (attempt #%d)\n",
-			timestamp, event.Name, attempt)
-
-		// Simulate different failure scenarios
-		if err := simulateProcessingFailures(event, attempt); err != nil {
-			fmt.Printf("   ❌ Processing failed: %v\n\n", err)
-			return err
+		// Simulate various failure scenarios
+		switch count {
+		case 1:
+			fmt.Printf("💥 Simulating network timeout failure\n")
+			return fmt.Errorf("network timeout")
+		case 2:
+			fmt.Printf("💥 Simulating database connection failure\n")
+			return fmt.Errorf("database connection failed")
+		case 3:
+			fmt.Printf("✅ Third time's the charm! Processing successfully\n")
+			return nil // Success
+		default:
+			fmt.Printf("✅ Processing successful\n")
+			return nil
 		}
-
-		fmt.Printf("   ✅ User %s processed successfully after %d attempts\n\n",
-			event.Name, attempt)
-		return nil
 	})
 	if err != nil {
-		log.Fatalf("❌ Failed to subscribe to recovery messages: %v", err)
+		log.Fatalf("Failed to subscribe: %v", err)
 	}
-
 	// Subscribe to email tasks (these should process normally)
-	err = client.Subscribe("email.tasks", func(ctx context.Context, task *proto.EmailSendTask) error {
+	err = consumer.Subscribe("email.tasks", func(ctx context.Context, task *proto.EmailSendTask) error {
 		timestamp := time.Now().Format("15:04:05")
 		fmt.Printf("📧 [%s] Processing email task: %s\n",
 			timestamp, task.Subject)
@@ -87,121 +89,31 @@ func main() {
 		log.Fatalf("❌ Failed to subscribe to email tasks: %v", err)
 	}
 
+	// Create context for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	fmt.Println("✅ Consumer ready! Testing message recovery scenarios...")
-	fmt.Println("📋 Subscribed to streams:")
-	fmt.Println("   • test.recovery - Recovery test messages")
-	fmt.Println("   • email.tasks   - Email sending tasks")
-	fmt.Println("\n📊 Consumer Group: recovery-demo")
-	fmt.Println("🆔 Consumer ID: recovery-consumer")
-	fmt.Println("\n🔄 Recovery Settings:")
-	fmt.Println("   • Idle Time: 30 seconds")
-	fmt.Println("   • Check Interval: 10 seconds")
-	fmt.Println("   • Max Retries: 2")
-	fmt.Println("   • Dead Letter: recovery-demo:failed")
-	fmt.Println("\n🛑 Press Ctrl+C to stop\n")
-
 	// Start consuming
-	go func() {
-		if err := client.StartConsuming(ctx); err != nil {
-			log.Printf("❌ Consumer error: %v", err)
-		}
-	}()
+	fmt.Printf("🚀 Starting recovery consumer...\n")
+	fmt.Printf("📝 Recovery Config: IdleTime=%v, ClaimInterval=%v, MaxRetries=%d\n",
+		recoveryConfig.IdleTime, recoveryConfig.ClaimInterval, recoveryConfig.MaxRetries)
 
-	// Monitor recovery process
-	go monitorRecoveryProcess(ctx, client)
+	err = consumer.StartConsuming(ctx)
+	if err != nil {
+		log.Fatalf("Failed to start consuming: %v", err)
+	}
 
-	// Setup graceful shutdown
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	// Wait for interrupt signal
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Wait for shutdown signal
-	<-sigCh
-	fmt.Println("\n🛑 Shutting down consumer...")
+	fmt.Printf("✅ Consumer started!")
+	fmt.Printf("💡 Press Ctrl+C to stop\n")
+
+	<-sigChan
+	fmt.Printf("\n🛑 Shutting down consumer...\n")
+
 	cancel()
-	client.StopConsuming()
-	fmt.Println("✅ Consumer stopped cleanly")
-}
 
-func simulateProcessingFailures(event *proto.UserCreatedEvent, attempt int) error {
-	// Different failure scenarios based on user type and attempt
-
-	if strings.Contains(event.UserId, "problematic") {
-		// Problematic users fail multiple times
-		if attempt <= 2 {
-			return fmt.Errorf("simulated database timeout for problematic user")
-		}
-		// Success after 2 failures
-		time.Sleep(150 * time.Millisecond)
-		return nil
-	}
-
-	if strings.Contains(event.UserId, "special") {
-		// Special users fail once, then succeed
-		if attempt == 1 {
-			return fmt.Errorf("simulated network error for special user")
-		}
-		time.Sleep(100 * time.Millisecond)
-		return nil
-	}
-
-	// Normal users always succeed
-	time.Sleep(50 * time.Millisecond)
-	return nil
-}
-
-func monitorRecoveryProcess(ctx context.Context, client *strego.Client) {
-	ticker := time.NewTicker(15 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			// Get recovery instance
-			recovery, err := client.GetRecovery()
-			if err != nil {
-				fmt.Printf("❌ Failed to get recovery instance: %v\n", err)
-				continue
-			}
-
-			// Check dead letter messages
-			deadLetters, err := recovery.GetDeadLetterMessages(ctx, 10)
-			if err != nil {
-				fmt.Printf("❌ Error getting dead letter messages: %v\n", err)
-				continue
-			}
-
-			if len(deadLetters) > 0 {
-				fmt.Printf("💀 [%s] Found %d messages in dead letter queue:\n",
-					time.Now().Format("15:04:05"), len(deadLetters))
-
-				for _, msg := range deadLetters {
-					fmt.Printf("   - Message ID: %s\n", msg.ID[:8])
-					if originalStream, ok := msg.Values["original_stream"]; ok {
-						fmt.Printf("     Original stream: %s\n", originalStream)
-					}
-					if reason, ok := msg.Values["reason"]; ok {
-						fmt.Printf("     Reason: %s\n", reason)
-					}
-				}
-
-				// Demonstrate reprocessing from dead letter
-				if len(deadLetters) > 0 {
-					fmt.Printf("\n🔄 Attempting to reprocess first dead letter message...\n")
-					if err := recovery.ReprocessDeadLetterMessage(ctx, deadLetters[0].ID); err != nil {
-						fmt.Printf("❌ Failed to reprocess: %v\n\n", err)
-					} else {
-						fmt.Printf("✅ Message queued for reprocessing\n\n")
-					}
-				}
-			} else {
-				fmt.Printf("✅ [%s] No messages in dead letter queue\n\n",
-					time.Now().Format("15:04:05"))
-			}
-		}
-	}
+	fmt.Printf("👋 Consumer stopped gracefully\n")
 }

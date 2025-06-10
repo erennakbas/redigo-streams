@@ -25,8 +25,8 @@ func NewMessageRecovery(client *redis.Client, consumerGroup, consumerName string
 		client:           client,
 		consumerGroup:    consumerGroup,
 		consumerName:     consumerName,
-		idleTime:         5 * time.Minute,  // Messages idle for 5 minutes can be claimed
-		claimInterval:    30 * time.Second, // Check for claimable messages every 30 seconds
+		idleTime:         30 * time.Second, // Messages idle for 30 seconds can be claimed (was 5 minutes)
+		claimInterval:    5 * time.Second,  // Check for claimable messages every 5 seconds (was 30 seconds)
 		maxRetries:       3,
 		deadLetterStream: fmt.Sprintf("%s:dead-letter", consumerGroup),
 	}
@@ -113,6 +113,8 @@ func (r *MessageRecovery) recoverPendingMessages(ctx context.Context, stream str
 	for _, msg := range pendingExt {
 		// Check if message has been idle long enough to claim
 		if msg.Idle < r.idleTime {
+			fmt.Printf("Message %s is not idle enough yet (idle: %v, required: %v)\n",
+				msg.ID, msg.Idle, r.idleTime)
 			continue
 		}
 
@@ -121,18 +123,20 @@ func (r *MessageRecovery) recoverPendingMessages(ctx context.Context, stream str
 
 		// Check if message has exceeded max retries
 		if int(msg.RetryCount) >= r.maxRetries {
+			fmt.Printf("Message %s exceeded max retries (%d), moving to dead letter\n",
+				msg.ID, r.maxRetries)
 			if err := r.moveToDeadLetter(ctx, stream, msg.ID); err != nil {
 				fmt.Printf("Failed to move message %s to dead letter: %v\n", msg.ID, err)
 			}
 			continue
 		}
 
-		// Claim the message
+		// Claim the message with force (use 0 MinIdle to force claim)
 		claimedMsgs, err := r.client.XClaim(ctx, &redis.XClaimArgs{
 			Stream:   stream,
 			Group:    r.consumerGroup,
 			Consumer: r.consumerName,
-			MinIdle:  r.idleTime,
+			MinIdle:  0, // Force claim regardless of idle time
 			Messages: []string{msg.ID},
 		}).Result()
 		if err != nil {
@@ -140,10 +144,19 @@ func (r *MessageRecovery) recoverPendingMessages(ctx context.Context, stream str
 			continue
 		}
 
+		if len(claimedMsgs) == 0 {
+			fmt.Printf("No messages claimed for %s (already processed?)\n", msg.ID)
+			continue
+		}
+
 		// Process claimed messages
 		for _, claimedMsg := range claimedMsgs {
+			fmt.Printf("Successfully claimed message %s, processing...\n", claimedMsg.ID)
 			if err := r.processClaimedMessage(ctx, stream, claimedMsg, processor); err != nil {
 				fmt.Printf("Failed to process claimed message %s: %v\n", claimedMsg.ID, err)
+				// Don't ACK the message if processing failed - it will be retried
+			} else {
+				fmt.Printf("Successfully processed and ACKed message %s\n", claimedMsg.ID)
 			}
 		}
 	}
@@ -155,12 +168,18 @@ func (r *MessageRecovery) recoverPendingMessages(ctx context.Context, stream str
 func (r *MessageRecovery) processClaimedMessage(ctx context.Context, stream string, message redis.XMessage, processor MessageProcessor) error {
 	// Process the message
 	if err := processor.ProcessMessage(ctx, stream, message); err != nil {
-		fmt.Printf("Error processing claimed message %s: %v\n", message.ID, err)
+		fmt.Printf("Error processing claimed message %s: %v (will be retried)\n", message.ID, err)
+		// Don't ACK the message - let it remain pending for retry
 		return err
 	}
 
-	// Acknowledge the message if processing was successful
-	return r.client.XAck(ctx, stream, r.consumerGroup, message.ID).Err()
+	// Acknowledge the message only if processing was successful
+	if err := r.client.XAck(ctx, stream, r.consumerGroup, message.ID).Err(); err != nil {
+		fmt.Printf("Failed to ACK message %s: %v\n", message.ID, err)
+		return err
+	}
+
+	return nil
 }
 
 // moveToDeadLetter moves a message to the dead letter stream
